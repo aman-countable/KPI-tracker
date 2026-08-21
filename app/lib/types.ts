@@ -3,8 +3,9 @@ export type Rag = "ok" | "risk" | "behind" | null;
 export type Period = {
   id: string;
   label: string;
-  year: number;
-  month: number;
+  year?: number;
+  month?: number;
+  months?: string[];
   started: boolean;
 };
 
@@ -30,9 +31,11 @@ export type Kpi = {
   owner: string | null;
   cells: Cell[];
   ytd: number | null;
+  weekly?: number | null;
   monthly: number | null;
   quarterly: number | null;
   annual: number | null;
+  parked?: boolean;
 };
 
 export type DrillRow = {
@@ -42,10 +45,21 @@ export type DrillRow = {
   stage: string;
   owner: string;
   deal_source: string;
+  channel?: string;
   amount: number | null;
   probability: number | null;
   weighted: number | null;
+  priority?: string;
+  next_action?: string;
   hubspot_url: string;
+};
+
+export type TargetProgress = {
+  label: string;
+  target: number;
+  actual: number | null;
+  pct_achv: number | null;
+  rag: Rag;
 };
 
 export type Snapshot = {
@@ -57,6 +71,15 @@ export type Snapshot = {
   visible_count: number;
   periods: Period[];
   kpis: Kpi[];
+  quarterly?: {
+    periods: Period[];
+    kpis: Kpi[];
+  };
+  targets_progress?: Record<string, TargetProgress>;
+  advanced_kpis?: Kpi[];
   drilldowns: Record<string, DrillRow[]>;
   teams: string[];
+  meeting_channels?: string[];
 };
+
+export type TabId = "overview" | "monthly" | "quarterly" | "advanced";

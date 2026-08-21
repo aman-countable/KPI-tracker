@@ -1,13 +1,17 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
-import type { DrillRow, Kpi, Snapshot } from "../lib/types";
-import { formatValue, ragLabel } from "../lib/format";
+import { useMemo, useState } from "react";
+import type { DrillRow, Kpi, Snapshot, TabId } from "../lib/types";
 import { DrillDrawer } from "./DrillDrawer";
+import { MonthlyMatrix } from "./MonthlyMatrix";
+import { OverviewDashboard } from "./OverviewDashboard";
+import { QuarterlyMatrix } from "./QuarterlyMatrix";
+import { TrackerNav } from "./TrackerNav";
 
 type Props = { data: Snapshot };
 
 export function TrackerApp({ data }: Props) {
+  const [tab, setTab] = useState<TabId>("monthly");
   const [teamFilter, setTeamFilter] = useState<string>("all");
   const [ragFilter, setRagFilter] = useState<string>("all");
   const [query, setQuery] = useState("");
@@ -22,42 +26,42 @@ export function TrackerApp({ data }: Props) {
     [data.periods],
   );
 
-  const visibleKpis = useMemo(() => {
-    return data.kpis.filter((k) => {
+  const filterKpis = (list: Kpi[]) =>
+    list.filter((k) => {
       if (teamFilter !== "all" && k.team !== teamFilter) return false;
-      if (query && !k.label.toLowerCase().includes(query.toLowerCase())) return false;
+      if (query && !k.label.toLowerCase().includes(query.toLowerCase())) {
+        return false;
+      }
       if (ragFilter !== "all") {
         const hit = k.cells.some(
           (c) =>
-            startedPeriods.some((p) => p.id === c.period_id) && c.rag === ragFilter,
+            startedPeriods.some((p) => p.id === c.period_id) &&
+            c.rag === ragFilter,
         );
         if (!hit) return false;
       }
       return true;
     });
-  }, [data.kpis, teamFilter, ragFilter, query, startedPeriods]);
 
-  const byTeam = useMemo(() => {
-    const order = data.teams;
-    const map = new Map<string, Kpi[]>();
-    for (const t of order) map.set(t, []);
-    for (const k of visibleKpis) {
-      if (!map.has(k.team)) map.set(k.team, []);
-      map.get(k.team)!.push(k);
-    }
-    return [...map.entries()].filter(([, rows]) => rows.length > 0);
-  }, [visibleKpis, data.teams]);
+  const visibleKpis = useMemo(
+    () => filterKpis(data.kpis),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data.kpis, teamFilter, ragFilter, query, startedPeriods],
+  );
 
-  function openDrill(kpi: Kpi, periodLabel: string) {
-    if (!kpi.kpi_id) return;
-    const key = `${kpi.kpi_id}|${periodLabel}`;
-    const rows = data.drilldowns[key] || [];
+  const advancedKpis = useMemo(
+    () => filterKpis(data.advanced_kpis || []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data.advanced_kpis, teamFilter, ragFilter, query, startedPeriods],
+  );
+
+  function onDrill(kpi: Kpi, periodLabel: string, rows: DrillRow[]) {
     setDrawer({ kpi, periodLabel, rows });
   }
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 pb-16 pt-8 sm:px-6">
-      <header className="mb-8">
+      <header className="mb-6">
         <p
           className="text-sm font-medium tracking-wide"
           style={{ color: "var(--color-sea)" }}
@@ -78,153 +82,91 @@ export function TrackerApp({ data }: Props) {
           <span aria-hidden>·</span>
           <span>{data.rag_rule}</span>
           <span aria-hidden>·</span>
-          <span>{data.visible_count} metrics</span>
-          <span aria-hidden>·</span>
-          <span>Refreshed {data.generated_at}</span>
+          <span>
+            {data.visible_count} KPIs · refreshed {data.generated_at}
+          </span>
         </div>
       </header>
 
-      <div className="mb-5 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-xs font-medium opacity-70">
-          Team
+      <TrackerNav active={tab} onChange={setTab} />
+
+      {tab !== "overview" ? (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
           <select
-            className="rounded-md border border-black/10 bg-white px-3 py-2 text-sm"
             value={teamFilter}
             onChange={(e) => setTeamFilter(e.target.value)}
+            className="rounded-md border border-black/15 bg-white px-2 py-1.5 text-sm"
           >
-            <option value="all">All</option>
+            <option value="all">All teams</option>
             {data.teams.map((t) => (
               <option key={t} value={t}>
                 {t}
               </option>
             ))}
           </select>
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-medium opacity-70">
-          Status
           <select
-            className="rounded-md border border-black/10 bg-white px-3 py-2 text-sm"
             value={ragFilter}
             onChange={(e) => setRagFilter(e.target.value)}
+            className="rounded-md border border-black/15 bg-white px-2 py-1.5 text-sm"
           >
-            <option value="all">All</option>
-            <option value="behind">Behind</option>
-            <option value="risk">At Risk</option>
+            <option value="all">All RAG</option>
             <option value="ok">On Track</option>
+            <option value="risk">At Risk</option>
+            <option value="behind">Behind</option>
           </select>
-        </label>
-        <label className="flex min-w-[200px] flex-1 flex-col gap-1 text-xs font-medium opacity-70">
-          Search KPI
           <input
-            className="rounded-md border border-black/10 bg-white px-3 py-2 text-sm"
-            placeholder="e.g. meetings booked"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search metrics…"
+            className="min-w-[12rem] flex-1 rounded-md border border-black/15 bg-white px-2 py-1.5 text-sm sm:max-w-xs"
           />
-        </label>
-      </div>
+        </div>
+      ) : null}
 
-      <div
-        className="overflow-auto rounded-xl border border-black/8 bg-white/80 shadow-sm"
-        style={{ maxHeight: "calc(100vh - 220px)" }}
-      >
-        <table className="w-full min-w-[960px] border-collapse text-left text-sm">
-          <thead className="sticky top-0 z-10 bg-[var(--color-mist)]">
-            <tr>
-              <th className="sticky left-0 z-20 bg-[var(--color-mist)] px-3 py-3 font-semibold">
-                KPI
-              </th>
-              {startedPeriods.map((p) => (
-                <th
-                  key={p.id}
-                  className="whitespace-nowrap px-2 py-3 text-center font-semibold"
-                >
-                  {p.label.replace(" 20", " '")}
-                </th>
-              ))}
-              <th className="px-3 py-3 text-right font-semibold">YTD</th>
-            </tr>
-          </thead>
-          <tbody>
-            {byTeam.map(([team, rows]) => (
-              <Fragment key={team}>
-                <tr>
-                  <td
-                    colSpan={startedPeriods.length + 2}
-                    className="bg-[var(--color-sea)] px-3 py-2 text-xs font-semibold uppercase tracking-wider text-white"
-                  >
-                    {team}
-                  </td>
-                </tr>
-                {rows.map((kpi) => (
-                  <tr
-                    key={`${kpi.team}-${kpi.label}`}
-                    className="border-t border-black/5 hover:bg-[var(--color-mist)]/40"
-                  >
-                    <td className="sticky left-0 z-[1] max-w-[260px] bg-white/95 px-3 py-2.5">
-                      <div className="font-medium leading-snug">{kpi.label}</div>
-                      <div className="mt-0.5 text-[11px] opacity-55">{kpi.notes}</div>
-                    </td>
-                    {startedPeriods.map((p) => {
-                      const cell = kpi.cells.find((c) => c.period_id === p.id);
-                      const actual = cell?.actual ?? null;
-                      const clickable = actual !== null && Boolean(kpi.kpi_id);
-                      return (
-                        <td key={p.id} className="px-1 py-1.5 text-center align-middle">
-                          <button
-                            type="button"
-                            disabled={!clickable}
-                            onClick={() => openDrill(kpi, p.label)}
-                            className={`mx-auto flex min-w-[72px] flex-col items-center rounded-md px-2 py-1.5 transition ${
-                              clickable
-                                ? "cursor-pointer hover:ring-2 hover:ring-[var(--color-sea)]/40"
-                                : "cursor-default opacity-40"
-                            }`}
-                            title={
-                              clickable ? "Open deals behind this number" : undefined
-                            }
-                          >
-                            <span className="font-semibold tabular-nums">
-                              {formatValue(actual, kpi.fmt)}
-                            </span>
-                            {cell?.rag && (
-                              <span
-                                className="mt-0.5 text-[10px] font-medium"
-                                style={{
-                                  color:
-                                    cell.rag === "ok"
-                                      ? "var(--color-ok)"
-                                      : cell.rag === "risk"
-                                        ? "var(--color-amber)"
-                                        : "var(--color-rose)",
-                                }}
-                              >
-                                {ragLabel(cell.rag)}
-                              </span>
-                            )}
-                          </button>
-                        </td>
-                      );
-                    })}
-                    <td className="px-3 py-2 text-right font-medium tabular-nums">
-                      {formatValue(kpi.ytd, kpi.fmt)}
-                    </td>
-                  </tr>
-                ))}
-              </Fragment>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {tab === "overview" ? <OverviewDashboard data={data} /> : null}
 
-      {drawer && (
+      {tab === "monthly" ? (
+        <MonthlyMatrix
+          data={data}
+          kpis={visibleKpis}
+          periods={data.periods}
+          onDrill={onDrill}
+        />
+      ) : null}
+
+      {tab === "quarterly" ? (
+        <QuarterlyMatrix data={data} onDrill={onDrill} />
+      ) : null}
+
+      {tab === "advanced" ? (
+        <div className="space-y-3">
+          <p className="text-sm opacity-70">
+            Audit / parked metrics (calls, mix, hygiene). Not on Atin&apos;s
+            primary dashboard — expand when something breaks.
+          </p>
+          {advancedKpis.length === 0 ? (
+            <p className="text-sm opacity-60">
+              No advanced KPIs in snapshot (or filtered out).
+            </p>
+          ) : (
+            <MonthlyMatrix
+              data={data}
+              kpis={advancedKpis}
+              periods={data.periods}
+              onDrill={onDrill}
+            />
+          )}
+        </div>
+      ) : null}
+
+      {drawer ? (
         <DrillDrawer
           kpiLabel={drawer.kpi.label}
           periodLabel={drawer.periodLabel}
           rows={drawer.rows}
           onClose={() => setDrawer(null)}
         />
-      )}
+      ) : null}
     </div>
   );
 }
