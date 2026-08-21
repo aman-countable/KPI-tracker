@@ -1,0 +1,5 @@
+# Countable Tracker (Vercel)
+.next
+node_modules
+.env*.local
+public/data/snapshot-*.json
