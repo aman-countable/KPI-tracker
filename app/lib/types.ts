@@ -44,6 +44,7 @@ export type DrillRow = {
   name: string;
   stage: string;
   owner: string;
+  sub_owner?: string;
   deal_source: string;
   channel?: string;
   amount: number | null;
@@ -59,6 +60,7 @@ export type DrillSummary = {
   total_weighted: number | null;
   total_amount: number | null;
   by_channel: Record<string, number>;
+  by_deal_source: Record<string, number>;
   by_priority: Record<string, number>;
 };
 

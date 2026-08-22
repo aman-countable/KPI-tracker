@@ -21,9 +21,9 @@ export function DrillDrawer({ kpiLabel, periodLabel, rows, summary, onClose }: P
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortAsc, setSortAsc] = useState(false);
 
-  const channels = useMemo(() => {
+  const dealSources = useMemo(() => {
     const s = new Set<string>();
-    for (const r of rows) if (r.channel) s.add(r.channel);
+    for (const r of rows) if (r.deal_source) s.add(r.deal_source);
     return [...s].sort();
   }, [rows]);
 
@@ -35,11 +35,10 @@ export function DrillDrawer({ kpiLabel, periodLabel, rows, summary, onClose }: P
 
   const filtered = useMemo(() => {
     let list = rows.filter((r) => {
-      if (channel !== "all" && r.channel !== channel) return false;
+      if (channel !== "all" && r.deal_source !== channel) return false;
       if (priority !== "all" && r.priority !== priority) return false;
       if (query) {
-        const q = query.toLowerCase();
-        const blob = `${r.name} ${r.owner} ${r.deal_source} ${r.stage} ${r.channel || ""}`.toLowerCase();
+        const q = query.toLowerCase();          const blob = `${r.name} ${r.owner} ${r.deal_source} ${r.stage} ${r.sub_owner || ""}`.toLowerCase();
         if (!blob.includes(q)) return false;
       }
       return true;
@@ -73,7 +72,7 @@ export function DrillDrawer({ kpiLabel, periodLabel, rows, summary, onClose }: P
 
   const totalAmount = summary?.total_amount ?? filtered.reduce((s, r) => s + (r.amount ?? 0), 0);
   const totalWeighted = summary?.total_weighted ?? filtered.reduce((s, r) => s + (r.weighted ?? 0), 0);
-  const byChannel = summary?.by_channel ?? {};
+  const byDealSource = summary?.by_deal_source ?? {};
 
   const sortArrow = (key: SortKey) =>
     sortKey === key ? (sortAsc ? " \u2191" : " \u2193") : "";
@@ -97,18 +96,18 @@ export function DrillDrawer({ kpiLabel, periodLabel, rows, summary, onClose }: P
             {totalAmount > 0 && (<><span className="text-[var(--color-border)]">|</span><span className="text-[var(--color-muted)]">Total:</span><span className="font-semibold tabular-nums">{formatValue(totalAmount, "usd")}</span></>)}
             {totalWeighted > 0 && (<><span className="text-[var(--color-border)]">|</span><span className="text-[var(--color-muted)]">Weighted:</span><span className="font-semibold tabular-nums">{formatValue(totalWeighted, "usd")}</span></>)}
           </div>
-          {Object.keys(byChannel).length > 0 && (
+          {Object.keys(byDealSource).length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {Object.entries(byChannel).sort((a, b) => b[1] - a[1]).map(([ch, count]) => (
-                <span key={ch} className="inline-flex items-center gap-1 rounded-full bg-[var(--color-sea)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--color-sea)]">
-                  {ch} <span className="tabular-nums opacity-70">{count}</span>
+              {Object.entries(byDealSource).sort((a, b) => b[1] - a[1]).map(([src, count]) => (
+                <span key={src} className="inline-flex items-center gap-1 rounded-full bg-[var(--color-sea)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--color-sea)]">
+                  {src} <span className="tabular-nums opacity-70">{count}</span>
                 </span>
               ))}
             </div>
           )}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search firm / owner / source..." className="min-w-[12rem] flex-1 rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-sea)] focus:ring-1 focus:ring-[var(--color-sea)]/30 transition" />
-            {channels.length > 0 && (<select value={channel} onChange={(e) => setChannel(e.target.value)} className="rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm"><option value="all">All channels</option>{channels.map((c) => (<option key={c} value={c}>{c}</option>))}</select>)}
+            {dealSources.length > 0 && (<select value={channel} onChange={(e) => setChannel(e.target.value)} className="rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm"><option value="all">All sources</option>{dealSources.map((c) => (<option key={c} value={c}>{c}</option>))}</select>)}
             {priorities.length > 0 && (<select value={priority} onChange={(e) => setPriority(e.target.value)} className="rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm"><option value="all">All priorities</option>{priorities.map((p) => (<option key={p} value={p}>{p}</option>))}</select>)}
           </div>
         </header>
@@ -117,9 +116,10 @@ export function DrillDrawer({ kpiLabel, periodLabel, rows, summary, onClose }: P
             <table className="w-full text-sm">
               <thead className="sticky top-0 z-10 bg-[var(--color-mist)]">
                 <tr className="text-left text-xs font-medium uppercase tracking-wider text-[var(--color-muted)]">
-                  <th className="px-6 py-3 min-w-[250px]">Deal / Firm</th>
+                  <th className="px-6 py-3 min-w-[220px]">Deal / Firm</th>
                   <th className="px-4 py-3">Stage</th>
                   <th className="px-4 py-3">Owner</th>
+                  <th className="px-4 py-3">Sub-owner</th>
                   <th className="px-4 py-3">Channel</th>
                   <th className="cursor-pointer select-none px-4 py-3 text-right hover:text-[var(--color-ink)]" onClick={() => toggleSort("amount")}>Amount{sortArrow("amount")}</th>
                   <th className="cursor-pointer select-none px-4 py-3 text-right hover:text-[var(--color-ink)]" onClick={() => toggleSort("weighted")}>Weighted{sortArrow("weighted")}</th>
@@ -136,6 +136,7 @@ export function DrillDrawer({ kpiLabel, periodLabel, rows, summary, onClose }: P
                     </td>
                     <td className="px-4 py-3 text-[var(--color-muted)] whitespace-nowrap">{r.stage || "\u2014"}</td>
                     <td className="px-4 py-3 whitespace-nowrap">{r.owner || "\u2014"}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-[var(--color-muted)]">{r.sub_owner || "\u2014"}</td>
                     <td className="px-4 py-3">{r.channel ? (<span className="inline-block rounded-full bg-[var(--color-sea)]/8 px-2 py-0.5 text-xs font-medium text-[var(--color-sea)]">{r.channel}</span>) : "\u2014"}</td>
                     <td className="px-4 py-3 text-right tabular-nums font-medium whitespace-nowrap">{r.amount != null ? formatValue(r.amount, "usd") : "\u2014"}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-[var(--color-muted)] whitespace-nowrap">{r.weighted != null ? formatValue(r.weighted, "usd") : "\u2014"}</td>
