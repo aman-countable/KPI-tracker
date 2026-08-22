@@ -2,15 +2,20 @@
 
 @theme {
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
-  --color-ink: #1a2332;
-  --color-paper: #f4f0e8;
-  --color-mist: #e8e2d6;
-  --color-sea: #1f6f6a;
-  --color-sea-deep: #14524e;
-  --color-amber: #c47a12;
-  --color-rose: #b33a3a;
-  --color-ok: #1f6b3a;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Clean analytics palette */
+  --color-paper: #f8f9fc;
+  --color-surface: #ffffff;
+  --color-ink: #111827;
+  --color-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --color-mist: #f1f5f9;
+  --color-sea: #2563eb;
+  --color-sea-deep: #1d4ed8;
+  --color-amber: #d97706;
+  --color-rose: #dc2626;
+  --color-ok: #16a34a;
 }
 
 @layer base {
@@ -18,11 +23,13 @@
   body {
     @apply min-h-screen antialiased;
     background:
-      radial-gradient(ellipse 80% 50% at 10% -10%, rgba(31, 111, 106, 0.12), transparent),
-      radial-gradient(ellipse 60% 40% at 100% 0%, rgba(196, 122, 18, 0.08), transparent),
+      radial-gradient(ellipse 80% 50% at 10% -10%, rgba(37, 99, 235, 0.06), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 0%, rgba(217, 119, 6, 0.04), transparent),
       var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
@@ -35,4 +42,14 @@
     transform: translateX(0);
     opacity: 1;
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, Fraunces } from "next/font/google";
+import { DM_Sans, Inter } from "next/font/google";
 import "./globals.css";
 
 const sans = DM_Sans({
@@ -8,7 +8,7 @@ const sans = DM_Sans({
   display: "swap",
 });
 
-const display = Fraunces({
+const display = Inter({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",

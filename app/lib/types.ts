@@ -54,6 +54,14 @@ export type DrillRow = {
   hubspot_url: string;
 };
 
+export type DrillSummary = {
+  total_rows: number;
+  total_weighted: number | null;
+  total_amount: number | null;
+  by_channel: Record<string, number>;
+  by_priority: Record<string, number>;
+};
+
 export type TargetProgress = {
   label: string;
   target: number;
@@ -78,6 +86,7 @@ export type Snapshot = {
   targets_progress?: Record<string, TargetProgress>;
   advanced_kpis?: Kpi[];
   drilldowns: Record<string, DrillRow[]>;
+  drilldown_summaries?: Record<string, DrillSummary>;
   teams: string[];
   meeting_channels?: string[];
 };

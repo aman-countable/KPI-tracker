@@ -2,11 +2,11 @@
 
 import type { TabId } from "../lib/types";
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "monthly", label: "Monthly" },
-  { id: "quarterly", label: "Quarterly" },
-  { id: "advanced", label: "Advanced" },
+const TABS: { id: TabId; label: string; icon: string }[] = [
+  { id: "overview", label: "Overview", icon: "\u25C9" },
+  { id: "monthly", label: "Monthly", icon: "\u25A4" },
+  { id: "quarterly", label: "Quarterly", icon: "\u25A3" },
+  { id: "advanced", label: "Advanced", icon: "\u2699" },
 ];
 
 type Props = {
@@ -16,7 +16,7 @@ type Props = {
 
 export function TrackerNav({ active, onChange }: Props) {
   return (
-    <nav className="mb-6 flex flex-wrap gap-1 border-b border-black/10 pb-px">
+    <nav className="flex gap-1 rounded-xl bg-[var(--color-mist)] p-1">
       {TABS.map((t) => {
         const on = active === t.id;
         return (
@@ -24,12 +24,13 @@ export function TrackerNav({ active, onChange }: Props) {
             key={t.id}
             type="button"
             onClick={() => onChange(t.id)}
-            className={`rounded-t-md px-4 py-2 text-sm font-medium transition ${
+            className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition ${
               on
                 ? "bg-white text-[var(--color-ink)] shadow-sm"
-                : "text-black/55 hover:bg-black/5 hover:text-black/80"
+                : "text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-white/50"
             }`}
           >
+            <span className="text-xs opacity-60">{t.icon}</span>
             {t.label}
           </button>
         );
