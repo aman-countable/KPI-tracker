@@ -199,11 +199,11 @@ export function MonthlyMatrix({ data, kpis, periods, onDrill, showYtd = true }: 
                             onClick={() => {
                               if (!kpi.kpi_id) return;
                               const plabel = labelById[p.id] || p.label;
-                              onDrill(
-                                kpi,
-                                plabel,
-                                data.drilldowns[`${kpi.kpi_id}|${plabel}`] || [],
-                              );
+                              const rawDrill = data.drilldowns[`${kpi.kpi_id}|${plabel}`] || [];
+                              const filteredDrill = kpi.scope_owner_name
+                                ? rawDrill.filter((r) => r.owner === kpi.scope_owner_name)
+                                : rawDrill;
+                              onDrill(kpi, plabel, filteredDrill);
                             }}
                             title={
                               cell.pct_achv != null

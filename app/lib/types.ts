@@ -28,7 +28,8 @@ export type Kpi = {
   notes: string;
   kpi_id: string | null;
   scope: string | null;
-  owner: string | null;
+  owner: string | null;
+  scope_owner_name: string | null;
   cells: Cell[];
   ytd: number | null;
   weekly?: number | null;
