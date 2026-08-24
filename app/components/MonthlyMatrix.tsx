@@ -199,7 +199,9 @@ export function MonthlyMatrix({ data, kpis, periods, onDrill, showYtd = true }: 
                             onClick={() => {
                               if (!kpi.kpi_id) return;
                               const plabel = labelById[p.id] || p.label;
-                              const rawDrill = data.drilldowns[`${kpi.kpi_id}|${plabel}`] || [];
+                              const drillKey = `${kpi.row_index}|${plabel}`;
+                              const rawDrill = data.drilldowns[drillKey] || [];
+                              // Already scoped in the snapshot; keep a safety filter
                               const filteredDrill = kpi.scope_owner_name
                                 ? rawDrill.filter((r) => r.owner === kpi.scope_owner_name)
                                 : rawDrill;

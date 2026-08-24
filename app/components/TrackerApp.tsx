@@ -48,6 +48,23 @@ export function TrackerApp({ data }: Props) {
     setDrawer({ kpi, periodLabel, rows });
   }
 
+  function drawerSummary(kpi: Kpi | undefined, periodLabel: string, rows: DrillRow[]) {
+    if (!kpi) return undefined;
+    const keyed = data.drilldown_summaries?.[`${kpi.row_index}|${periodLabel}`];
+    if (keyed) return keyed;
+    // Fallback: summarize the exact rows shown (never the unfiltered team set)
+    const totalAmount = rows.reduce((s, r) => s + (r.amount ?? 0), 0);
+    const totalWeighted = rows.reduce((s, r) => s + (r.weighted ?? 0), 0);
+    return {
+      total_rows: rows.length,
+      total_amount: totalAmount || null,
+      total_weighted: totalWeighted || null,
+      by_channel: {},
+      by_deal_source: {},
+      by_priority: {},
+    };
+  }
+
   // RAG summary counts
   const behind = data.kpis.filter((k) => k.cells.some((c) => c.rag === "behind")).length;
   const risk = data.kpis.filter((k) => k.cells.some((c) => c.rag === "risk")).length;
@@ -147,7 +164,7 @@ export function TrackerApp({ data }: Props) {
           kpiLabel={drawer.kpi.label}
           periodLabel={drawer.periodLabel}
           rows={drawer.rows}
-          summary={data.drilldown_summaries?.[`${drawer.kpi.kpi_id}|${drawer.periodLabel}`]}
+          summary={drawerSummary(drawer.kpi, drawer.periodLabel, drawer.rows)}
           onClose={() => setDrawer(null)}
         />
       )}
