@@ -47,7 +47,11 @@ function CircularGauge({ item }: { item: TargetProgress }) {
 
 export function OverviewDashboard({ data }: Props) {
   const tp = data.targets_progress || {};
-  const order = ["firms", "users", "arr", "weighted_pipe", "flex_commit"];
+  // "book" added 2026-08-24: the standing billed book, kept beside New ACV
+  // Closed rather than blended into it. They are different measures with
+  // similar names, which is exactly how a $1M goal got compared against a
+  // single month.
+  const order = ["firms", "users", "arr", "book", "weighted_pipe", "flex_commit"];
   const items = order.map((k) => tp[k]).filter(Boolean) as TargetProgress[];
 
   // Behind KPIs list
@@ -60,8 +64,11 @@ export function OverviewDashboard({ data }: Props) {
       {/* North Star gauges */}
       <section>
         <h2 className="text-lg font-bold" style={{ fontFamily: "var(--font-display)" }}>North Star Progress</h2>
-        <p className="mt-1 text-sm text-[var(--color-muted)]">200 firms · ~800 users · $1M ARR · $1.8M weighted pipe · $500K Flex</p>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <p className="mt-1 text-sm text-[var(--color-muted)]">
+          200 firms · ~800 users · $1M new ACV · $1.8M weighted pipe · $500K Flex.
+          Firms and ACV accumulate across the FY; users, pipeline, book and Flex are point-in-time.
+        </p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {items.map((item) => (
             <CircularGauge key={item.label} item={item} />
           ))}

@@ -1,36 +1,81 @@
 @import "tailwindcss";
 
+/* ── Palette ────────────────────────────────────────────────────────────────
+   In a RAG dashboard the brand accent must be chromatically distinct from red,
+   amber AND green, or a coloured "this is clickable" cue reads as a fourth
+   status at 12px in a dense grid. The old accent was #2563eb blue, which sat
+   close enough to the green "on track" to be ambiguous in a 12-column matrix.
+   The accent is now a deep ink-teal, and RAG stays the only saturated colour
+   on the page. All three RAG values are darkened for small-text legibility on
+   white, and each carries enough lightness contrast to survive greyscale
+   printing — Atin reviews these in meetings.
+   --------------------------------------------------------------------------- */
 @theme {
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* Clean analytics palette */
-  --color-paper: #f8f9fc;
+  --color-paper: #f6f7f8;
   --color-surface: #ffffff;
-  --color-ink: #111827;
-  --color-muted: #6b7280;
-  --color-border: #e5e7eb;
-  --color-mist: #f1f5f9;
-  --color-sea: #2563eb;
-  --color-sea-deep: #1d4ed8;
-  --color-amber: #d97706;
-  --color-rose: #dc2626;
-  --color-ok: #16a34a;
+  --color-ink: #16191d;
+  --color-muted: #5c6570;
+  --color-border: #e3e6e9;
+  --color-mist: #eff2f4;
+
+  --color-accent: #0f5257;
+  --color-accent-hover: #12727a;
+  /* Retained alias: other components still reference --color-sea. */
+  --color-sea: #0f5257;
+  --color-sea-deep: #0a3d41;
+
+  --color-ok: #1b7f4b;
+  --color-amber: #b4690e;
+  --color-rose: #b23127;
 }
 
 @layer base {
   * { box-sizing: border-box; }
+
   body {
     @apply min-h-screen antialiased;
-    background:
-      radial-gradient(ellipse 80% 50% at 10% -10%, rgba(37, 99, 235, 0.06), transparent),
-      radial-gradient(ellipse 60% 40% at 100% 0%, rgba(217, 119, 6, 0.04), transparent),
-      var(--color-paper);
+    background: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  /* Every digit in the matrix lines up in a column, so figures must be
+     monospaced-by-width even in the proportional UI face. */
+  .tabular-nums,
+  table {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Atin reviews the tracker in meetings and prints it. Drop the chrome, keep
+   the numbers, and let the RAG stripe carry status when colour is lost. */
+@media print {
+  body { background: #fff; }
+  thead tr { background: #fff !important; color: #000 !important; }
+  thead th { border-bottom: 1px solid #000; }
+  table { font-size: 9pt; }
+  .no-print { display: none !important; }
 }
 
 @keyframes slideIn {
@@ -47,9 +92,4 @@
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
